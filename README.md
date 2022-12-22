@@ -17,5 +17,3 @@ Example event:
 
 
 ![Alt text](example_event.PNG "Google Calendar sample event")
-
-and create a single calendar entry that contains all the events of interest 
