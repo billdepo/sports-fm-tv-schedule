@@ -18,7 +18,7 @@ Example event:
 
 ![Alt text](example_event.PNG "Google Calendar sample event")
 
-# How to run
+# How to run with virtual environment
 
 First, create your virtual environment using:
 > python -m venv venv
@@ -34,4 +34,15 @@ Then make sure you create a `.env` file based on the structure of the `.env.exam
 Then, from the Google Cloud project you need to create, you will need to have a `.credentials/` directory, within which the `credentials.json` file will be. This file is downloaded from within the Google Cloud `OAuth 2.0 Client IDs` section and the key you create there in order to get access to the Google Calendar API service.
 
 Once all the above steps are completed, you can then run the application with:
-> python scrape.py
+> python main.py
+
+
+---
+# How to run with Docker
+
+First, build an image called `sport-fm` with the following command:
+> docker build -t sport-fm .
+
+And then run a container out of this image with the command below, where you need to provide the `CALENDAR_ID` and `CALENDAR_NAME` environment variables.
+
+> docker run -it --rm --env URL_TO_SCRAPE='https://www.sport-fm.gr/tv' --env CREDENTIALS_JSON_PATH='.credentials/credentials.json' --env CALENDAR_ID='YOUR_CAL_ID_HERE' --env CALENDAR_NAME='YOUR_CAL_NAME_HERE' sport-fm python main.py
