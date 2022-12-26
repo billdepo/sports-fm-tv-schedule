@@ -46,3 +46,24 @@ First, build an image called `sport-fm` with the following command:
 And then run a container out of this image with the command below, where you need to provide the `CALENDAR_ID` and `CALENDAR_NAME` environment variables.
 
 > docker run -it --rm --env URL_TO_SCRAPE='https://www.sport-fm.gr/tv' --env CREDENTIALS_JSON_PATH='.credentials/credentials.json' --env CALENDAR_ID='YOUR_CAL_ID_HERE' --env CALENDAR_NAME='YOUR_CAL_NAME_HERE' sport-fm python main.py
+
+---
+# How to run with a bash script and Docker
+
+Create a very simple bash script to automate the whole procedure of running the container. The script should be a `.sh` file, eg `sport-fm.sh` and include the following in the file:
+
+```
+#!/bin/bash
+cd /home/user/projects/sports-fm-tv-schedule  # HERE INCLUDE THE PATH WHERE THE scrape.py file is located
+
+docker run -it --rm --env URL_TO_SCRAPE='https://www.sport-fm.gr/tv' \
+--env CREDENTIALS_JSON_PATH='.credentials/credentials.json' --env \
+CALENDAR_ID='YOUR_CALENDAR_ID_HERE' \
+--env CALENDAR_NAME='YOUR_CALENDAR_NAME_HERE' sport-fm python scrape.py
+```
+
+Then, you just need run the script each time you want to scrape the day's sports events by running:
+
+> sh sport-fm.sh
+
+This will run the container, create the calendar event and then remove the container.
