@@ -9,7 +9,8 @@ Scrapes [sport-fm.gr/tv](https://www.sport-fm.gr/tv) daily, φιλτράρει �
     Description:
     ⚽ 19:45 Arsenal - Manchester City | Champions League, TNT Sports
     🏀 21:00 Ολυμπιακός - Παναθηναϊκός | EuroLeague, Novasports Prime
-
+    
+![Google Calendar sample event](example_event.PNG)
 
 ## Subscribe to the Calendar
 
