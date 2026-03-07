@@ -1,69 +1,120 @@
-# Parse Sports TV events from https://www.sport-fm.gr/tv on a daily basis.
+# Sports FM TV Schedule → Google Calendar
 
-This project scrapes https://www.sport-fm.gr/tv to get each day's sports events that are of interest and then creates a single Google Calendar event on a selected calendar.
+Scrapes [sport-fm.gr/tv](https://www.sport-fm.gr/tv) daily, φιλτράρει τα events με Claude AI βάσει προσωπικών προτιμήσεων, και δημιουργεί ένα Google Calendar event με τα αθλητικά της ημέρας.
 
-Example event:
+**Example event:**
 
-    Title: Sport Events Tournaments: Euroleague, Λιγκ Καπ Αγγλίας
-    Date: Friday, December 23, 10:00 – 10:01
-    Description: 
-    Φενέρμπαχτσε - Παρτίζαν | Euroleague @ 19:45, NOVASPORTS 4
-    Αλμπα Βερολίνου - Μακάμπι Τελ Αβίβ | Euroleague @ 21:00, NOVASPORTS 5
-    Ολυμπιακός - Ερυθρός Αστέρας | Euroleague @ 21:00, Novasports Prime
-    Μπασκόνια - Βίρτους Μπολόνια | Euroleague @ 21:30, Novasports Start
-    Μάντσεστερ Σίτι - Λίβερπουλ | Λιγκ Καπ Αγγλίας @ 21:50, Action 24
-    Μάντσεστερ Σίτι - Λίβερπουλ | Λιγκ Καπ Αγγλίας @ 22:00, Action 24
-    Ρεάλ Μαδρίτης - Βιλερμπάν | Euroleague @ 22:00, NOVASPORTS 4
+    Title: Αθλητικά – Παρασκευή 7 Μαρτίου
+    Date: Friday, March 7, 09:00 – 09:01
+    Description:
+    ⚽ 19:45 Arsenal - Manchester City | Champions League, TNT Sports
+    🏀 21:00 Ολυμπιακός - Παναθηναϊκός | EuroLeague, Novasports Prime
 
+![Google Calendar sample event](example_event.PNG)
 
-![Alt text](example_event.PNG "Google Calendar sample event")
+## Subscribe to the Calendar
 
-# How to run with virtual environment
+Αν δεν θέλεις να τρέξεις το project μόνος σου, μπορείς να κάνεις απευθείας subscribe στο calendar:
 
-First, create your virtual environment using:
-> python -m venv venv
-
-Then activate your virtual environment, eg. for Linux run:
-> source venv/bin/activate
-
-And once your virtual environment has been activated, install all dependencies using:
-> pip install -r requirements.txt
-
-Then make sure you create a `.env` file based on the structure of the `.env.example` file. This file will contain all environment variables. You need to provide the `CALENDAR_ID` and `CALENDAR_NAME` that you can get from the calendar you have created at your Google account.
-
-Then, from the Google Cloud project you need to create, you will need to have a `.credentials/` directory, within which the `credentials.json` file will be. This file is downloaded from within the Google Cloud `OAuth 2.0 Client IDs` section and the key you create there in order to get access to the Google Calendar API service.
-
-Once all the above steps are completed, you can then run the application with:
-> python main.py
-
+👉 [Subscribe στο Google Calendar](https://calendar.google.com/calendar/u/0?cid=NGI4YzBjY2RkMWZmNDM0ZmQzNjg0ZmQ2MTllZTFmZjYyNWE0NTBkNGU1OWI1NzQ1NDkzODgyMjU3MjM5ZTdiOEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t)
 
 ---
-# How to run with Docker
 
-First, build an image called `sport-fm` with the following command:
-> docker build -t sport-fm .
+## Prerequisites
 
-And then run a container out of this image with the command below, where you need to provide the `CALENDAR_ID` and `CALENDAR_NAME` environment variables.
+### 1. Google Cloud — OAuth Credentials
 
-> docker run -it --rm --env URL_TO_SCRAPE='https://www.sport-fm.gr/tv' --env CREDENTIALS_JSON_PATH='.credentials/credentials.json' --env CALENDAR_ID='YOUR_CAL_ID_HERE' --env CALENDAR_NAME='YOUR_CAL_NAME_HERE' sport-fm python main.py
+1. Πήγαινε στο [console.cloud.google.com](https://console.cloud.google.com)
+2. Ενεργοποίησε το **Google Calendar API**: APIs & Services → Enable APIs
+3. Δημιούργησε credentials: APIs & Services → Credentials → Create Credentials → **OAuth 2.0 Client ID** (Desktop app)
+4. Κατέβασε το JSON → αποθήκευσε ως `.credentials/credentials.json`
+5. Πρόσθεσε τον εαυτό σου ως test user στο OAuth consent screen
+6. Βρες το **Calendar ID**: Google Calendar → Settings → (επίλεξε ημερολόγιο) → Calendar ID
+
+### 2. Anthropic API Key (προαιρετικό)
+
+Αν θέλεις φιλτράρισμα με Claude AI, δημιούργησε API key στο [console.anthropic.com](https://console.anthropic.com).
+Αν δεν οριστεί, το script δημιουργεί event με όλα τα events χωρίς φιλτράρισμα.
+
+### 3. Αρχείο `.env`
+
+Αντέγραψε το `.env.example` σε `.env` και συμπλήρωσε:
+
+```
+URL_TO_SCRAPE=https://www.sport-fm.gr/tv
+CREDENTIALS_JSON_PATH=.credentials/credentials.json
+CALENDAR_ID=your-calendar-id@group.calendar.google.com
+ANTHROPIC_API_KEY=sk-ant-...
+CLAUDE_MODEL=claude-haiku-4-5
+```
+
+### 4. Προτιμήσεις φιλτραρίσματος
+
+Επεξεργάσου το αρχείο `prompts/preferences.txt` με τις διοργανώσεις/ομάδες που σε ενδιαφέρουν.
 
 ---
-# How to run with a bash script and Docker
 
-Create a very simple bash script to automate the whole procedure of running the container. The script should be a `.sh` file, eg `sport-fm.sh` and include the following in the file:
+## Local Development
 
-```
-#!/bin/bash
-cd /home/user/projects/sports-fm-tv-schedule  # HERE INCLUDE THE PATH WHERE THE scrape.py file is located
+```bash
+python -m venv venv
+source venv/bin/activate        # Linux/Mac
+# ή: venv\Scripts\activate      # Windows
 
-docker run -it --rm --env URL_TO_SCRAPE='https://www.sport-fm.gr/tv' \
---env CREDENTIALS_JSON_PATH='.credentials/credentials.json' --env \
-CALENDAR_ID='YOUR_CALENDAR_ID_HERE' \
---env CALENDAR_NAME='YOUR_CALENDAR_NAME_HERE' sport-fm python scrape.py
+pip install -r requirements.txt
+python scrape.py
 ```
 
-Then, you just need run the script each time you want to scrape the day's sports events by running:
+Η πρώτη εκτέλεση ανοίγει browser για OAuth → δημιουργείται `token.pickle` στο `.credentials/`.
 
-> sh sport-fm.sh
+---
 
-This will run the container, create the calendar event and then remove the container.
+## Docker (Production — Raspberry Pi)
+
+Το Docker image τρέχει αυτόματα κάθε μέρα στις **08:00 Athens time** (Europe/Athens timezone).
+
+### Setup
+
+```bash
+# Clone
+git clone https://github.com/<username>/sports-fm-tv-schedule.git
+cd sports-fm-tv-schedule
+
+# Αντέγραψε secrets από το laptop
+scp .env pi@<RPi-IP>:~/sports-fm-tv-schedule/
+scp -r .credentials/ pi@<RPi-IP>:~/sports-fm-tv-schedule/
+
+# Build & start
+docker compose up -d --build
+```
+
+### Χειροκίνητη εκτέλεση (test)
+
+```bash
+docker compose run --rm sport-fm python scrape.py
+```
+
+### Logs
+
+```bash
+docker compose logs -f
+# ή μέσα στο container:
+docker exec <container_id> cat /var/log/sport-fm.log
+```
+
+---
+
+## Project Structure
+
+```
+├── scrape.py           # Entry point — scraping & orchestration
+├── calendar_utils.py   # Google Calendar event creation
+├── claude_utils.py     # Anthropic API filtering
+├── prompts/
+│   ├── preferences.txt # Προσωπικές προτιμήσεις (διοργανώσεις, ομάδες)
+│   ├── instructions.txt# Prompt template
+│   └── system.txt      # System prompt για Claude
+├── Dockerfile          # Alpine + crond, τρέχει 08:00 Athens time
+├── docker-compose.yml  # Volume mounts για .credentials/
+└── .env.example        # Template για environment variables
+```
