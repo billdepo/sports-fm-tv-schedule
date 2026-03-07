@@ -1,0 +1,9 @@
+venv/
+.env
+.credentials/
+.git/
+__pycache__/
+*.pyc
+*.pickle
+.vscode/
+example_event.PNG

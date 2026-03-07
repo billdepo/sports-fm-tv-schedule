@@ -1,0 +1,8 @@
+services:
+  sport-fm:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./.credentials:/home/sport-fm-app/.credentials
+    env_file:
+      - .env
