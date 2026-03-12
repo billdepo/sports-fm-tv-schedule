@@ -11,3 +11,4 @@
 4. Κάνε format το μήνυμα κατάλληλα ώστε να μπει ως content στις πληροφορίες ενός Google Calendar invite.
 5. Αν δεν υπάρχουν events που να ταιριάζουν, γράψε "Δεν υπάρχουν events για σήμερα βάσει των προτιμήσεών σου."
 6. Μεταξύ των events, μην έχεις κενή γραμμή.
+7. Μετέτρεψε το timezone σε CET (Zurich). Τα events δίνονται αρχικά σε Eastern European Time (Athens).
