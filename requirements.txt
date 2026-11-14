@@ -1,5 +1,6 @@
-bs4
-gcsa
-DateTime
-python-dotenv
-anthropic
+anthropic==0.84.0
+beautifulsoup4==4.14.3
+gcsa==2.6.0
+python-dotenv==1.2.2
+# Το zoneinfo δεν έχει tz database στα Windows (και στο python:*-slim).
+tzdata==2025.3

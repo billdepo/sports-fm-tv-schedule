@@ -52,6 +52,18 @@ CLAUDE_MODEL=claude-haiku-4-5
 
 Επεξεργάσου το αρχείο `prompts/preferences.txt` με τις διοργανώσεις/ομάδες που σε ενδιαφέρουν.
 
+Προσοχή στον διαχωρισμό: στο `preferences.txt` μπαίνουν **μόνο κανόνες που θέλουν κρίση** («μόνο derby Ολυμπιακού–Παναθηναϊκού»). Οι κανόνες που είναι αριθμητική ή lookup ζουν σε κώδικα, στο [events.py](events.py):
+
+| Κανόνας | Πού ζει |
+|---|---|
+| Παράθυρο έναρξης (10:00–23:30 CET) | `WINDOW_START` / `WINDOW_END` |
+| Αποκλεισμός NBA | `EXCLUDED_TOURNAMENTS` |
+| Μετατροπή ώρας Αθήνα → Ζυρίχη | `to_target_tz()` (μέσω `zoneinfo`, χειρίζεται μόνο του θερινή ώρα) |
+| Emoji ανά άθλημα | `_SPORT_PATTERNS` |
+| Ποια events ταιριάζουν στις προτιμήσεις | **το LLM** ([claude_utils.py](claude_utils.py)) |
+
+Αυτό κρατά το μοντέλο σε ένα στενό interface (`list[TvEvent] -> list[int]`, μέσω structured outputs) και εμποδίζει σιωπηλά λάθη σε ό,τι μπορεί να υπολογιστεί ντετερμινιστικά.
+
 ---
 
 ## Local Development
@@ -66,6 +78,19 @@ python scrape.py
 ```
 
 Η πρώτη εκτέλεση ανοίγει browser για OAuth → δημιουργείται `token.pickle` στο `.credentials/`.
+
+Για verbose output: `LOG_LEVEL=DEBUG python scrape.py` (δείχνει ποια events κόπηκαν και γιατί).
+
+### Tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+Τα tests τρέχουν πάνω σε πραγματικό HTML snapshot (`tests/fixtures/tv_2026-11-14.html`) — **χωρίς network, χωρίς API calls**. Η σελίδα σερβίρει πέντε ημέρες (2 περασμένες, σήμερα, 2 επόμενες) σε ένα HTML ως tab panels, και το `tv_page.parse_events()` κρατά μόνο το panel της ζητούμενης ημερομηνίας, **ταιριάζοντας dd/mm** αντί να εμπιστεύεται το `is-active` (που σε cached σελίδα δείχνει λάθος μέρα σιωπηλά).
+
+Όταν αλλάξει ξανά η σελίδα: κατέβασε νέο snapshot, αντικατέστησε το fixture και ενημέρωσε τα `PANEL_COUNTS` στο [tests/test_tv_page.py](tests/test_tv_page.py).
 
 ---
 
@@ -107,14 +132,37 @@ docker exec <container_id> cat /var/log/sport-fm.log
 ## Project Structure
 
 ```
-├── scrape.py           # Entry point — scraping & orchestration
+├── scrape.py           # Entry point — orchestration
+├── tv_page.py          # Fetch + parsing (επιλογή panel ημέρας, CSS selectors)
+├── events.py           # TvEvent model, timezone, prefilter, emoji, formatting
+├── claude_utils.py     # Σημασιολογική επιλογή μέσω Claude (structured outputs)
 ├── calendar_utils.py   # Google Calendar event creation
-├── claude_utils.py     # Anthropic API filtering
 ├── prompts/
-│   ├── preferences.txt # Προσωπικές προτιμήσεις (διοργανώσεις, ομάδες)
+│   ├── preferences.txt # Προτιμήσεις που θέλουν κρίση (διοργανώσεις, ομάδες)
 │   ├── instructions.txt# Prompt template
 │   └── system.txt      # System prompt για Claude
-├── Dockerfile          # Alpine + crond, τρέχει 08:00 Athens time
+├── tests/
+│   ├── test_tv_page.py # Tests parsing/timezone/emoji/prefilter
+│   └── fixtures/       # Πραγματικό HTML snapshot του sport-fm.gr/tv
+├── Dockerfile          # python:3.12-slim + cron, τρέχει 08:00 Athens time
 ├── docker-compose.yml  # Volume mounts για .credentials/
 └── .env.example        # Template για environment variables
+```
+
+### Ροή
+
+```
+fetch_page ──▶ parse_events(html, today)   μόνο το panel της σημερινής dd/mm
+                      │                     29 events (όχι 135)
+                      ▼
+               prefilter()                  ώρες + NBA, ντετερμινιστικά
+                      │                     25 events
+                      ▼
+               select_events()              LLM: μόνο κρίση → indices
+                      │                     ~10 events
+                      ▼
+               format_description()          emoji + ώρες, σε Python
+                      │
+                      ▼
+               create_google_cal_event()
 ```

@@ -1,46 +1,46 @@
-from typing import Optional
+"""Δημιουργία του Google Calendar event."""
 
-from datetime import datetime as dt
-from datetime import timedelta as dt_td
+from __future__ import annotations
+
+import logging
+from datetime import date, datetime, time, timedelta
+
 from gcsa.event import Event
-from claude_utils import filter_with_claude
+
+from events import TARGET_TZ, TvEvent, format_description
+
+log = logging.getLogger(__name__)
+
+_GREEK_DAYS = ("Δευτέρα", "Τρίτη", "Τετάρτη", "Πέμπτη", "Παρασκευή", "Σάββατο", "Κυριακή")
+_GREEK_MONTHS = (
+    "Ιανουαρίου", "Φεβρουαρίου", "Μαρτίου", "Απριλίου", "Μαΐου", "Ιουνίου",
+    "Ιουλίου", "Αυγούστου", "Σεπτεμβρίου", "Οκτωβρίου", "Νοεμβρίου", "Δεκεμβρίου",
+)
+
+# Ώρα του placeholder event, σε TARGET_TZ.
+_EVENT_TIME = time(9, 0)
+_EVENT_DURATION = timedelta(minutes=1)
 
 
-def create_google_cal_event(
-    events: list,
-    calendar,
-    anthropic_api_key: Optional[str] = None,
-    claude_model: Optional[str] = None,
-    preferences: Optional[str] = None,
-):
-    """Creates a calendar event using Google Calendar API."""
+def build_summary(day: date) -> str:
+    return f"Αθλητικά – {_GREEK_DAYS[day.weekday()]} {day.day} {_GREEK_MONTHS[day.month - 1]}"
 
-    raw_lines = []
 
-    for e in events:
-        title, tournament, tv_channel, event_start = e
-        raw_lines.append(f'{title} | {tournament} @ {event_start}, {tv_channel}')
+def create_google_cal_event(events: list[TvEvent], calendar, day: date) -> Event:
+    """Γράφει ένα event στο calendar με τα αθλητικά της ημέρας `day`.
 
-    events_raw = '\n'.join(raw_lines)
-
-    if anthropic_api_key and claude_model and preferences:
-        print('Filtering events with Claude...')
-        description = filter_with_claude(events_raw, preferences, anthropic_api_key, claude_model)
-    else:
-        description = events_raw
-
-    today = dt.now()
-    greek_days = ["Δευτέρα", "Τρίτη", "Τετάρτη", "Πέμπτη", "Παρασκευή", "Σάββατο", "Κυριακή"]
-    greek_months = ["Ιανουαρίου", "Φεβρουαρίου", "Μαρτίου", "Απριλίου", "Μαΐου", "Ιουνίου",
-                    "Ιουλίου", "Αυγούστου", "Σεπτεμβρίου", "Οκτωβρίου", "Νοεμβρίου", "Δεκεμβρίου"]
-    day_name = greek_days[today.weekday()]
-    month_name = greek_months[today.month - 1]
-    summary = f"Αθλητικά – {day_name} {today.day} {month_name}"
-    selected_datetime = today.replace(hour=9, minute=0, second=0, microsecond=0)
+    Το start/end είναι timezone-aware σε TARGET_TZ, ώστε να μην εξαρτάται από το
+    TZ του container ή από το default timezone του calendar.
+    """
+    start = datetime.combine(day, _EVENT_TIME, tzinfo=TARGET_TZ)
     event = Event(
-        summary=summary,
-        start=selected_datetime,
-        end=selected_datetime + dt_td(minutes=1),
-        description=description,
+        summary=build_summary(day),
+        start=start,
+        end=start + _EVENT_DURATION,
+        description=format_description(events),
     )
-    calendar.add_event(event)
+
+    created = calendar.add_event(event)
+    log.info("created calendar event %r at %s with %d entries",
+             event.summary, start.isoformat(), len(events))
+    return created
