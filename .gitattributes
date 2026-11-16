@@ -1,0 +1,13 @@
+# Τα αρχεία που εκτελούνται μέσα στο Linux container ΠΡΕΠΕΙ να έχουν LF.
+# Με CRLF, το shebang γίνεται "#!/bin/sh\r" και το container αποτυγχάνει με
+# "bad interpreter: No such file or directory".
+*.sh            text eol=lf
+Dockerfile      text eol=lf
+*.yml           text eol=lf
+requirements*.txt text eol=lf
+
+# Το HTML fixture είναι byte-for-byte snapshot· καμία μετατροπή.
+tests/fixtures/*.html -text
+
+*.PNG binary
+*.png binary

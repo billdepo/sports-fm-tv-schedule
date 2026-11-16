@@ -145,6 +145,9 @@ docker exec <container_id> cat /var/log/sport-fm.log
 │   ├── test_tv_page.py # Tests parsing/timezone/emoji/prefilter
 │   └── fixtures/       # Πραγματικό HTML snapshot του sport-fm.gr/tv
 ├── Dockerfile          # python:3.12-slim + cron, τρέχει 08:00 Athens time
+├── docker/
+│   ├── entrypoint.sh   # Γράφει το env για το cron (quoted), ξεκινά cron, tail -F
+│   └── run-job.sh      # Το cron job: φορτώνει env, rotate log, τρέχει scrape.py
 ├── docker-compose.yml  # Volume mounts για .credentials/
 └── .env.example        # Template για environment variables
 ```
