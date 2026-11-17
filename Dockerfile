@@ -5,8 +5,10 @@ FROM python:3.12-slim
 ENV PYTHONUNBUFFERED=1
 ENV TZ=Europe/Athens
 
+# procps δίνει ps/pgrep: χωρίς αυτά δεν μπορείς να ελέγξεις αν τρέχει το cron
+# μέσα στο container, πράγμα που κάνει τη διάγνωση στο Pi δυσανάλογα δύσκολη.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends tzdata cron \
+    && apt-get install -y --no-install-recommends tzdata cron procps \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /home/sport-fm-app/
